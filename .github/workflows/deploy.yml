@@ -18,30 +18,19 @@ jobs:
             set -euo pipefail
 
             DEPLOY_DIR="/home/${{ secrets.USERNAME }}/bnsp"
-            REPO_URL="https://github.com/raihanaselole/bnsp.git"   # ganti sesuai repo Anda
+            REPO_URL="https://github.com/raihanaselole/bnsp.git"
             CONTAINER_NAME="deploy_app"
-
-            # pastikan path ada & dimiliki correct user
             sudo mkdir -p "${DEPLOY_DIR}" || true
             sudo chown -R "${{ secrets.USERNAME }}":"${{ secrets.USERNAME }}" "${DEPLOY_DIR}" || true
-
-            # clone jika belum ada
             if [ ! -d "${DEPLOY_DIR}/.git" ]; then
               echo "Repo tidak ada, clone..."
               git clone "${REPO_URL}" "${DEPLOY_DIR}"
               sudo chown -R "${{ secrets.USERNAME }}":"${{ secrets.USERNAME }}" "${DEPLOY_DIR}"
             fi
-
             cd "${DEPLOY_DIR}"
-
-            # tambahkan safe.directory agar git tidak menolak (atasi dubious ownership)
             git config --global --add safe.directory "${DEPLOY_DIR}" || true
-
-            # sinkronisasi dengan remote secara deterministik
             git fetch --all --prune
             git reset --hard origin/main
-
-            # build image tanpa cache (opsional) atau copy file langsung
             docker compose build --no-cache
             docker compose down || true
             docker compose up -d --force-recreate --remove-orphans
