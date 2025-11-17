@@ -15,7 +15,12 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            cd /home/bnsp8/bnsp
-            git pull origin main
-            docker compose down
-            docker compose up -d --no-cache --build
+            set -euo pipefail
+            cd /home/${{ secrets.USERNAME }}/bnsp
+            git fetch --all
+            git reset --hard origin/main
+            git config --global --add safe.directory /home/${{ secrets.USERNAME }}/bnsp || true
+            docker compose down || true
+            docker compose build --no-cache
+            docker compose up -d --force-recreate --remove-orphans
+
